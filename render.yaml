@@ -1,11 +1,14 @@
 services:
   - type: web
     name: eiwitlimonade-chatbot
-    env: docker
+    env: python
     plan: free
-    dockerfilePath: Dockerfile
+    region: frankfurt
+    buildCommand: |
+      pip install --upgrade pip
+      pip install --force-reinstall -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port 10000
     envVars:
       - key: OPENAI_API_KEY
-      - key: SITEMAP_URL
-      - key: LANGUAGE
-      - key: PORT
+        value: sk-xxx  # jouw echte OpenAI API-key hier
+    autoDeploy: true
