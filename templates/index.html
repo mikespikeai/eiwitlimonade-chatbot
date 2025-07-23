@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat met de website</title>
+</head>
+<body>
+  <h2>Stel je vraag over de website:</h2>
+  <form method="post" action="/query">
+    <input type="text" name="vraag" placeholder="Typ hier je vraag" style="width: 300px;" required>
+    <button type="submit">Stel vraag</button>
+  </form>
+
+  {% if vraag %}
+    <h3>Vraag:</h3>
+    <p>{{ vraag }}</p>
+  {% endif %}
+
+  {% if antwoord %}
+    <h3>Antwoord:</h3>
+    <p>{{ antwoord }}</p>
+  {% endif %}
+</body>
+</html>
