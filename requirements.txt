@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+openai
+llama_index
+beautifulsoup4
+requests
