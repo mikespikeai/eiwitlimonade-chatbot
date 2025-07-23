@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from llama_index.core import VectorStoreIndex, ServiceContext
 from llama_index.llms.openai import OpenAI
 from llama_index.core.node_parser import SimpleNodeParser
-from llama_hub.web.sitemap.base import SitemapReader
+from sitemap_loader import SitemapReader
 
 
 # Configuratie vanuit omgevingsvariabelen
