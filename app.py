@@ -1,10 +1,11 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index import VectorStoreIndex, ServiceContext
+from llama_index.core import VectorStoreIndex, ServiceContext
 from llama_index.llms.openai import OpenAI
-from llama_index.node_parser import SimpleNodeParser
+from llama_index.core.node_parser import SimpleNodeParser
 from llama_hub.web.sitemap.base import SitemapReader
+
 
 # Configuratie vanuit omgevingsvariabelen
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
