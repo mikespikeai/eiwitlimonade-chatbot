@@ -12,5 +12,5 @@ services:
     startCommand: uvicorn app:app --host 0.0.0.0 --port 10000
     envVars:
       - key: OPENAI_API_KEY
-        value: sk-...jouw-sleutel...
+        value: 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
     autoDeploy: true
