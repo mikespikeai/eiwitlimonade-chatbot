@@ -1,44 +1,47 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index import VectorStoreIndex, ServiceContext
-from llama_index.readers.sitemap import SitemapReader
-from openai import OpenAI
+from llama_index.core import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
+from llama_index.core.node_parser import SimpleNodeParser
+from llama_index.core.readers.sitemap import SitemapReader
+from llama_index.llms.openai import OpenAI
 
-import asyncio
-
-SITEMAP_URL = os.getenv("SITEMAP_URL")
+# Omgevingsvariabelen
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-LANG = os.getenv("LANGUAGE", "nl")
+SITEMAP_URL = os.getenv("SITEMAP_URL")
+LANGUAGE = os.getenv("LANGUAGE", "nl")
 
-# Crawling: haal pagina’s op via sitemap
-from llama_index.readers.sitemap import SitemapReader
+# Laad en parse de sitemap
 documents = SitemapReader().load_data(SITEMAP_URL)
-index = VectorStoreIndex.from_documents(documents,
-    service_context=ServiceContext.from_defaults(
-        chunk_size=512,
-        llm=OpenAI(api_key=OPENAI_KEY, model="gpt-3.5-turbo", temperature=0),
-    ))
+parser = SimpleNodeParser.from_defaults()
+nodes = parser.get_nodes_from_documents(documents)
 
+# Context met GPT-3.5
+llm = OpenAI(api_key=OPENAI_KEY, model="gpt-3.5-turbo", temperature=0)
+service_context = ServiceContext.from_defaults(llm=llm)
+
+# Bouw index
+index = VectorStoreIndex(nodes, service_context=service_context)
+query_engine = index.as_query_engine(similarity_top_k=3)
+
+# FastAPI setup
 app = FastAPI()
 
 @app.post("/query")
 async def query(request: Request):
     body = await request.json()
-    query_str = body.get("q", "")
-    resp = index.query(query_str)
-    answer = resp.response.strip()
-    if resp.source_nodes is None:
-        answer = "Sorry, ik heb daar geen informatie over."
-    return {"answer": answer}
+    vraag = body.get("q", "")
+    antwoord = query_engine.query(vraag).response.strip()
+    return {"answer": antwoord}
 
 @app.get("/", response_class=HTMLResponse)
 async def chat():
     return """
 <!DOCTYPE html>
 <html><body>
-<h3>AI-chat over jouw site</h3>
-<input id="q" placeholder="Stel je vraag..." style="width:80%"><button onclick="ask()">Vraag</button>
+<h3>AI-chat over eiwitlimonade</h3>
+<input id="q" placeholder="Stel je vraag..." style="width:80%">
+<button onclick="ask()">Vraag</button>
 <pre id="out"></pre>
 <script>
 async function ask() {
@@ -54,6 +57,7 @@ async function ask() {
 </script>
 </body></html>
 """
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 3000)))
