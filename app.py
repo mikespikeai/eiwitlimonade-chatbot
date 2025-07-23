@@ -1,26 +1,25 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index.core import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
-from llama_index.core.node_parser import SimpleNodeParser
-from llama_hub.web.sitemap.base import SitemapReader  # ✅ correct
+from llama_index import VectorStoreIndex, ServiceContext
 from llama_index.llms.openai import OpenAI
+from llama_index.node_parser import SimpleNodeParser
+from llama_hub.web.sitemap.base import SitemapReader
 
-# Omgevingsvariabelen
+# Configuratie vanuit omgevingsvariabelen
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 SITEMAP_URL = os.getenv("SITEMAP_URL")
 LANGUAGE = os.getenv("LANGUAGE", "nl")
 
-# Laad en parse de sitemap
+# Sitemap inladen
 documents = SitemapReader().load_data(SITEMAP_URL)
+
+# Parseren & index bouwen
 parser = SimpleNodeParser.from_defaults()
 nodes = parser.get_nodes_from_documents(documents)
 
-# Context met GPT-3.5
 llm = OpenAI(api_key=OPENAI_KEY, model="gpt-3.5-turbo", temperature=0)
 service_context = ServiceContext.from_defaults(llm=llm)
-
-# Bouw index
 index = VectorStoreIndex(nodes, service_context=service_context)
 query_engine = index.as_query_engine(similarity_top_k=3)
 
@@ -29,17 +28,17 @@ app = FastAPI()
 
 @app.post("/query")
 async def query(request: Request):
-    body = await request.json()
-    vraag = body.get("q", "")
+    data = await request.json()
+    vraag = data.get("q", "")
     antwoord = query_engine.query(vraag).response.strip()
     return {"answer": antwoord}
 
 @app.get("/", response_class=HTMLResponse)
-async def chat():
+async def frontend():
     return """
 <!DOCTYPE html>
 <html><body>
-<h3>AI-chat over eiwitlimonade</h3>
+<h3>AI-chat over jouw site</h3>
 <input id="q" placeholder="Stel je vraag..." style="width:80%">
 <button onclick="ask()">Vraag</button>
 <pre id="out"></pre>
