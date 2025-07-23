@@ -3,7 +3,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from llama_index import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
 from llama_index.llms import OpenAI
 
 from sitemap_loader import SitemapReader
