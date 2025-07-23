@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index import GPTSimpleVectorIndex, ServiceContext
+from llama_index import VectorStoreIndex, ServiceContext
 from llama_index.readers.sitemap import SitemapReader
 from openai import OpenAI
 
@@ -14,7 +14,7 @@ LANG = os.getenv("LANGUAGE", "nl")
 # Crawling: haal pagina’s op via sitemap
 from llama_index.readers.sitemap import SitemapReader
 documents = SitemapReader().load_data(SITEMAP_URL)
-index = GPTSimpleVectorIndex.from_documents(documents,
+index = VectorStoreIndex.from_documents(documents,
     service_context=ServiceContext.from_defaults(
         chunk_size=512,
         llm=OpenAI(api_key=OPENAI_KEY, model="gpt-3.5-turbo", temperature=0),
