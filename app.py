@@ -1,62 +1,43 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
-from llama_index import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
+from fastapi.templating import Jinja2Templates
+
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, ServiceContext
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 from sitemap_loader import SitemapReader
 
+# ─────────── SETTINGS ───────────
+SITEMAP_URL = "https://eiwitlimonade.nl/sitemap_index.xml"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+assert OPENAI_API_KEY, "Zet je OpenAI API-key als omgevingsvariabele."
 
-# Configuratie vanuit omgevingsvariabelen
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-SITEMAP_URL = os.getenv("SITEMAP_URL")
-LANGUAGE = os.getenv("LANGUAGE", "nl")
-
-# Sitemap inladen
+# ─────────── INDEX ───────────
 documents = SitemapReader().load_data(SITEMAP_URL)
 
-# Parseren & index bouwen
-parser = SimpleNodeParser.from_defaults()
-nodes = parser.get_nodes_from_documents(documents)
+service_context = ServiceContext.from_defaults(
+    llm=OpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY),
+    embed_model=OpenAIEmbedding(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
+)
 
-llm = OpenAI(api_key=OPENAI_KEY, model="gpt-3.5-turbo", temperature=0)
-service_context = ServiceContext.from_defaults(llm=llm)
-index = VectorStoreIndex(nodes, service_context=service_context)
-query_engine = index.as_query_engine(similarity_top_k=3)
+index = VectorStoreIndex.from_documents(documents, service_context=service_context)
+query_engine = index.as_query_engine(similarity_top_k=5)
 
-# FastAPI setup
+# ─────────── FASTAPI ───────────
 app = FastAPI()
-
-@app.post("/query")
-async def query(request: Request):
-    data = await request.json()
-    vraag = data.get("q", "")
-    antwoord = query_engine.query(vraag).response.strip()
-    return {"answer": antwoord}
+templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
-async def frontend():
-    return """
-<!DOCTYPE html>
-<html><body>
-<h3>AI-chat over jouw site</h3>
-<input id="q" placeholder="Stel je vraag..." style="width:80%">
-<button onclick="ask()">Vraag</button>
-<pre id="out"></pre>
-<script>
-async function ask() {
-  let q = document.getElementById("q").value
-  let res = await fetch('/query', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({q})
-  })
-  let j = await res.json()
-  document.getElementById("out").innerText = j.answer
-}
-</script>
-</body></html>
-"""
+async def form(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 3000)))
+@app.post("/query", response_class=HTMLResponse)
+async def query(request: Request, vraag: str = Form(...)):
+    try:
+        result = query_engine.query(vraag)
+        antwoord = result.response
+    except Exception as e:
+        antwoord = f"Fout: {e}"
+    return templates.TemplateResponse("index.html", {"request": request, "vraag": vraag, "antwoord": antwoord})
