@@ -1,6 +1,7 @@
+llama-index==0.10.28
+openai==1.14.3
 fastapi
 uvicorn
-openai
-llama_index
 beautifulsoup4
 requests
+
