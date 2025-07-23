@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from llama_index.core import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
 from llama_index.core.node_parser import SimpleNodeParser
-from llama_index.core.readers.sitemap import SitemapReader
+from llama_hub.web.sitemap.base import SitemapReader  # ✅ correct
 from llama_index.llms.openai import OpenAI
 
 # Omgevingsvariabelen
