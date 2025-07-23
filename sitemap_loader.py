@@ -11,9 +11,10 @@ class SitemapReader:
         documents = []
         for url in urls:
             try:
-                page = requests.get(url)
-                text = BeautifulSoup(page.text, "html.parser").get_text()
+                page = requests.get(url, timeout=10)
+                soup = BeautifulSoup(page.text, "html.parser")
+                text = soup.get_text(separator=" ", strip=True)
                 documents.append(Document(text=text, metadata={"url": url}))
             except Exception as e:
-                print(f"Fout bij {url}: {e}")
+                print(f"Fout bij laden van {url}: {e}")
         return documents
