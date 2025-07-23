@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from llama_index.core import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
-from llama_index.core.llms import OpenAI
+from llama_index.llms.openai import OpenAI
 
 from sitemap_loader import SitemapReader
 
