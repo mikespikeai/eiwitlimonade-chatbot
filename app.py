@@ -1,9 +1,10 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index import download_loader, GPTSimpleVectorIndex, SimpleDirectoryReader
-from llama_index import ServiceContext
+from llama_index import GPTSimpleVectorIndex, ServiceContext
+from llama_index.readers.sitemap import SitemapReader
 from openai import OpenAI
+
 import asyncio
 
 SITEMAP_URL = os.getenv("SITEMAP_URL")
