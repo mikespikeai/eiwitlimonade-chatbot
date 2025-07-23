@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from llama_index.core import VectorStoreIndex, ServiceContext
+from llama_index import VectorStoreIndex, ServiceContext, SimpleDirectoryReader
 from llama_index.llms.openai import OpenAI
 from llama_index.core.node_parser import SimpleNodeParser
 from sitemap_loader import SitemapReader
